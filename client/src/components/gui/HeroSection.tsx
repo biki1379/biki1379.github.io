@@ -21,9 +21,9 @@ interface HeroSectionProps {
 function deriveStats(data: PortfolioData, pypiStats?: PyPIStatsData) {
   const cv = data.cv;
   const sections = cv.sections;
-  const candidates: { value: number; suffix: string; label: string; priority: number }[] = [];
+  const candidates: { value: number | string; suffix: string; label: string; priority: number }[] = [];
 
-  // Years of experience
+  // Years of experience - show "Fresher" if years <= 0
   if (sections.experience?.length) {
     const earliest = sections.experience.reduce((min, exp) => {
       const year = parseInt(exp.start_date);
@@ -32,6 +32,9 @@ function deriveStats(data: PortfolioData, pypiStats?: PyPIStatsData) {
     const years = new Date().getFullYear() - earliest;
     if (years > 0) {
       candidates.push({ value: years, suffix: '+', label: 'Years Experience', priority: 1 });
+    } else {
+      // Show "Fresher" for newly graduated or interns
+      candidates.push({ value: 'Fresher', suffix: '', label: 'Status', priority: 1 });
     }
   }
 
@@ -237,7 +240,7 @@ export default function HeroSection({ data, pypiStats, onTripleTap, onTriggerRac
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px max-w-4xl">
           {stats.map((stat, i) => {
             let onLongPress: (() => void) | undefined;
-            if (stat.label === 'Years Experience') onLongPress = onTriggerRacer;
+            if (stat.label === 'Years Experience' || stat.label === 'Status') onLongPress = onTriggerRacer;
             else if (stat.label === 'PyPI Downloads') onLongPress = onTriggerSnake;
             return (
               <StatCard
