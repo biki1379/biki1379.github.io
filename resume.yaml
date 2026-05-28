@@ -4,7 +4,7 @@
 
 cv:
   name: "Biki Saha"
-  tagline: "Fresher focused on backend systems and cloud infrastructure"
+  tagline: "CS graduate focused on backend systems and cloud infrastructure"
   location: "Kolkata, West Bengal"
   email: "bikisaha003@gmail.com"
   phone: "tel:+91-90027-62648"
@@ -32,14 +32,6 @@ cv:
         details: "Linux, Windows"
 
     experience:
-      - company: "Sparks Lab"
-        position: "Operation Analyst"
-        start_date: "2026-01"
-        end_date: "2026-04"
-        highlights:
-          - "Coordinated with clients and internal teams to ensure smooth daily workflow execution."
-          - "Managed task tracking, communication pipelines, and operational processes in a fast-paced environment."
-
       - company: "Elevate Labs"
         position: "SQL Developer Intern"
         location: "Bengaluru, Karnataka"
