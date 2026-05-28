@@ -1,0 +1,258 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(120, 100%, 50%);
+  --muted: hsl(120, 100%, 10%);
+  --muted-foreground: hsl(120, 50%, 70%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(120, 100%, 50%);
+  --card: hsl(0, 0%, 0%);
+  --card-foreground: hsl(120, 100%, 50%);
+  --border: hsl(120, 100%, 20%);
+  --input: hsl(120, 100%, 20%);
+  --primary: hsl(120, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(120, 100%, 10%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(120, 100%, 20%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(120, 100%, 50%);
+  --radius: 0.5rem;
+  
+  --terminal-green: hsl(120, 100%, 50%);
+  --terminal-bright-green: hsl(120, 100%, 60%);
+  --terminal-black: hsl(0, 0%, 0%);
+  --terminal-white: hsl(0, 0%, 100%);
+  --glow-color-rgb: 0, 255, 0;
+
+  /* TUI semantic tokens — theme-following. See applyColorTheme(). */
+  --tui-accent-dim: hsl(120, 80%, 42%);   /* darker-hue label color; follows theme */
+  --tui-muted: hsl(120, 12%, 60%);        /* very low-sat gray + whisper of hue */
+  --tui-error: hsl(0, 100%, 60%);         /* errors are universal red, never themed */
+  --tui-warn: hsl(45, 100%, 55%);         /* warnings are universal amber */
+
+  /* Backwards-compat aliases — old `text-terminal-yellow`/`text-terminal-red`
+     classes still work, and now pick up the theme-following semantics above. */
+  --terminal-yellow: var(--tui-accent-dim);
+  --terminal-red: var(--tui-error);
+
+  /* GUI Portfolio variables — update gui-theme.config.ts to change theme */
+  --gui-bg: #000000;
+  --gui-surface: #0a0a0a;
+  --gui-border: rgba(255, 255, 255, 0.08);
+  --gui-text: #e4e4e7;
+  --gui-text-muted: #a1a1aa;
+  --gui-accent: #00ff00;
+  --gui-accent-hover: #00c800;
+  --gui-accent-rgb: 0, 255, 0;
+  --gui-accent-ch: 0 255 0;
+}
+
+/* Hide page scrollbar — amber dot serves as progress indicator */
+html::-webkit-scrollbar {
+  display: none;
+}
+html {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar for horizontal carousel */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.dark {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(120, 100%, 50%);
+  --muted: hsl(120, 100%, 10%);
+  --muted-foreground: hsl(120, 50%, 70%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(120, 100%, 50%);
+  --card: hsl(0, 0%, 0%);
+  --card-foreground: hsl(120, 100%, 50%);
+  --border: hsl(120, 100%, 20%);
+  --input: hsl(120, 100%, 20%);
+  --primary: hsl(120, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(120, 100%, 10%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(120, 100%, 20%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(120, 100%, 50%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-mono antialiased bg-terminal-black text-terminal-green;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    body {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  }
+}
+
+@layer utilities {
+  .terminal-scanlines::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    /* Scanline tint follows the active theme hue instead of being baked
+       matrix-green — a Glacier theme now has glacier-tinted scanlines. */
+    background: linear-gradient(transparent 50%, rgba(var(--glow-color-rgb), 0.03) 50%);
+    background-size: 100% 4px;
+    opacity: 0.1;
+  }
+
+  @media (max-width: 768px) {
+    .terminal-scanlines::before {
+      background-size: 100% 2px;
+      opacity: 0.05;
+    }
+  }
+  
+  .terminal-glow {
+    /* Outer glow only — the previous `inset` + outer combo caused
+       `Block`-in-frame nested glows that muddied on saturated themes. */
+    box-shadow: 0 0 20px rgba(var(--glow-color-rgb), 0.2);
+  }
+
+  @media (max-width: 768px) {
+    .terminal-glow {
+      box-shadow: 0 0 10px rgba(var(--glow-color-rgb), 0.15);
+    }
+  }
+
+  .scrollbar-terminal {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .scrollbar-terminal::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-terminal::-webkit-scrollbar-track {
+    background: var(--terminal-black);
+  }
+  
+  .scrollbar-terminal::-webkit-scrollbar-thumb {
+    background: var(--terminal-green);
+    border-radius: 4px;
+  }
+  
+  .scrollbar-terminal::-webkit-scrollbar-thumb:hover {
+    background: var(--terminal-bright-green);
+  }
+
+  @media (max-width: 768px) {
+    .scrollbar-terminal::-webkit-scrollbar {
+      width: 4px;
+    }
+  }
+
+  .blink {
+    animation: blink 1s infinite;
+  }
+
+  /* Engulf: per-element spaghettification. Each leaf element computes its
+     own trajectory toward the BH (the transform/transition are applied
+     inline from JS). This rule only handles pointer-events/selection lockout
+     on the container while a BH holds the stage. */
+  body[data-bh-active] [data-engulfable] {
+    pointer-events: none;
+    -webkit-user-select: none;
+            user-select: none;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typewriter 0.05s steps(1, end) forwards;
+  }
+
+  @keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  /* Select-to-Reveal: hidden text visible only on text selection */
+  .secret-text {
+    color: transparent;
+    user-select: text;
+    font-size: 0.7em;
+    letter-spacing: 0.05em;
+  }
+  .secret-text::selection {
+    color: var(--gui-accent);
+    background: rgba(var(--gui-accent-rgb), 0.15);
+  }
+  .secret-text::-moz-selection {
+    color: var(--gui-accent);
+    background: rgba(var(--gui-accent-rgb), 0.15);
+  }
+
+  /* Film grain overlay — applied site-wide on both TUI and GUI so
+     the two views share one atmospheric noise floor. Paused when
+     prefers-reduced-motion is set. */
+  .film-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    animation: grain 0.5s steps(6) infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .film-grain {
+      animation: none;
+    }
+  }
+  @keyframes grain {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-2%, -3%); }
+    20% { transform: translate(3%, 1%); }
+    30% { transform: translate(-1%, 2%); }
+    40% { transform: translate(2%, -2%); }
+    50% { transform: translate(-3%, 1%); }
+    60% { transform: translate(1%, -1%); }
+    70% { transform: translate(-2%, 3%); }
+    80% { transform: translate(3%, -1%); }
+    90% { transform: translate(-1%, 2%); }
+  }
+}

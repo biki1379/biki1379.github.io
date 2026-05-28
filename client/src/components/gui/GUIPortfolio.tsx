@@ -1,0 +1,250 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { loadPortfolioData } from '../../lib/portfolioDataLoader';
+import { loadPyPIStats, type PyPIStatsData } from '../../lib/pypiStats';
+import { apiConfig } from '../../config';
+import { guiTheme, accentHex, accentHoverHex, accentRgbCss, getSavedTheme, applyColorTheme } from '../../config/gui-theme.config';
+import { useGestureTrigger } from '../../hooks/useGestureTrigger';
+import { useIsMobile } from '../../hooks/use-mobile';
+import Navbar from './Navbar';
+import HeroSection from './HeroSection';
+import AboutSection from './AboutSection';
+import ExperienceSection from './ExperienceSection';
+import ProfessionalProjectsSection from './ProfessionalProjectsSection';
+import ProjectsSection from './ProjectsSection';
+import TechStackSection from './TechStackSection';
+import EducationSection from './EducationSection';
+import PublicationSection from './PublicationSection';
+import ContactSection from './ContactSection';
+import FloatingTerminalButton from './FloatingTerminalButton';
+import ScrollBallGame from './ScrollBallGame';
+import MouseSpotlight from './MouseSpotlight';
+import WireframeGrid from './WireframeGrid';
+import MatrixRain from './MatrixRain';
+import ThemeFlash from './KonamiEasterEgg';
+import SnakeGame from './SnakeGame';
+import ReflexGame from './ReflexGame';
+import RacerGame from './RacerGame';
+import HelpSheet from './HelpSheet';
+import ReplicateSheet from './ReplicateSheet';
+
+const SECTIONS = ['about', 'skills', 'experience', 'work', 'projects', 'education', 'publication', 'contact'];
+
+export default function GUIPortfolio() {
+  const [activeSection, setActiveSection] = useState<string>('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const [motionEnabled, setMotionEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('motionPermission') === 'granted';
+  });
+  const [showMotionToast, setShowMotionToast] = useState(false);
+  const { themeFlash, snakeActive, reflexActive, racerActive, helpActive, replicateActive, resetThemeFlash, resetSnake, resetReflex, resetRacer, resetHelp, resetReplicate, triggerSnake, triggerReflex, triggerRacer, triggerHelp, triggerReplicate } = useGestureTrigger(motionEnabled);
+
+  // URL-hash deep links: games + replicate-sheet hashes open the matching overlay.
+  // Works on direct page load AND when navigating back/forward through history.
+  useEffect(() => {
+    const check = () => {
+      const h = window.location.hash.slice(1).toLowerCase();
+      if (h === 'snake') triggerSnake();
+      else if (h === 'racer') triggerRacer();
+      else if (h === 'reflex') triggerReflex();
+      else if (h === 'help') triggerHelp();
+      else if (h === 'replicate' || h === 'fork' || h === 'clone') triggerReplicate();
+    };
+    check();
+    window.addEventListener('hashchange', check);
+    return () => window.removeEventListener('hashchange', check);
+  }, [triggerSnake, triggerReflex, triggerRacer, triggerHelp, triggerReplicate]);
+
+  // When a sheet/game closes, reset the hash back to #gui so a browser refresh
+  // doesn't re-open the overlay and the URL reflects current state.
+  const clearGameHash = useCallback(() => {
+    const h = window.location.hash.toLowerCase();
+    const overlayHashes = ['#snake', '#racer', '#reflex', '#help', '#replicate', '#fork', '#clone'];
+    if (overlayHashes.includes(h)) {
+      window.history.replaceState(null, '', '#gui');
+    }
+  }, []);
+  const handleResetSnake = useCallback(() => { resetSnake(); clearGameHash(); }, [resetSnake, clearGameHash]);
+  const handleResetReflex = useCallback(() => { resetReflex(); clearGameHash(); }, [resetReflex, clearGameHash]);
+  const handleResetRacer = useCallback(() => { resetRacer(); clearGameHash(); }, [resetRacer, clearGameHash]);
+  const handleResetHelp = useCallback(() => { resetHelp(); clearGameHash(); }, [resetHelp, clearGameHash]);
+  const handleResetReplicate = useCallback(() => { resetReplicate(); clearGameHash(); }, [resetReplicate, clearGameHash]);
+
+  // Show motion permission toast on mobile if not yet granted
+  useEffect(() => {
+    if (!isMobile) return;
+    const stored = localStorage.getItem('motionPermission');
+    if (stored === 'granted') return; // Already working
+    // Delay toast so it doesn't compete with page load
+    const timer = setTimeout(() => setShowMotionToast(true), 3000);
+    return () => clearTimeout(timer);
+  }, [isMobile]);
+
+  const handleEnableMotion = useCallback(async () => {
+    try {
+      // iOS 13+ requires explicit permission
+      if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+        const result = await (DeviceMotionEvent as any).requestPermission();
+        if (result === 'granted') {
+          localStorage.setItem('motionPermission', 'granted');
+          setMotionEnabled(true);
+        } else {
+          localStorage.setItem('motionPermission', 'denied');
+        }
+      } else {
+        // Android — no permission needed
+        localStorage.setItem('motionPermission', 'granted');
+        setMotionEnabled(true);
+      }
+      // Lock to portrait globally — user gesture satisfies browser requirement
+      (screen.orientation as any)?.lock?.('portrait').catch(() => {});
+    } catch {
+      localStorage.setItem('motionPermission', 'denied');
+    }
+    setShowMotionToast(false);
+  }, []);
+
+  const dismissMotionToast = useCallback(() => {
+    localStorage.setItem('motionPermission', 'dismissed');
+    setShowMotionToast(false);
+  }, []);
+
+  // Apply GUI theme CSS variables from config (single source of truth)
+  // Restores previously saved color theme on mount
+  useEffect(() => {
+    const root = document.documentElement.style;
+    root.setProperty('--gui-bg', guiTheme.bg);
+    root.setProperty('--gui-surface', guiTheme.surface);
+    root.setProperty('--gui-border', guiTheme.border);
+    root.setProperty('--gui-text', guiTheme.text);
+    root.setProperty('--gui-text-muted', guiTheme.textMuted);
+    root.setProperty('--gui-accent', accentHex);
+    root.setProperty('--gui-accent-hover', accentHoverHex);
+    root.setProperty('--gui-accent-rgb', accentRgbCss);
+    root.setProperty('--gui-accent-ch', accentRgbCss.replace(/,\s*/g, ' '));
+    // Restore saved color theme (overrides defaults above if non-default)
+    const saved = getSavedTheme();
+    applyColorTheme(saved);
+  }, []);
+
+  const { data: portfolioData, isLoading, error } = useQuery({
+    queryKey: ['portfolio-data'],
+    queryFn: loadPortfolioData,
+    retry: apiConfig.query.retryAttempts,
+    staleTime: apiConfig.query.cacheTime,
+  });
+
+  const { data: pypiStats } = useQuery({
+    queryKey: ['pypi-stats'],
+    queryFn: loadPyPIStats,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  // Track active section via IntersectionObserver
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    SECTIONS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveSection(id);
+          }
+        },
+        { threshold: 0.3 }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [portfolioData]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gui-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !portfolioData) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-gui-text-muted font-mono text-sm">
+        Failed to load portfolio data.
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={containerRef}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      data-gui-portfolio
+      className="min-h-screen bg-black text-gui-text font-sans overflow-y-auto"
+    >
+      <WireframeGrid />
+      <MatrixRain />
+      <MouseSpotlight />
+      <ThemeFlash theme={themeFlash} onClose={resetThemeFlash} />
+      <SnakeGame active={snakeActive} onClose={handleResetSnake} />
+      <ReflexGame active={reflexActive} onClose={handleResetReflex} />
+      <RacerGame active={racerActive} onClose={handleResetRacer} />
+      <div data-engulfable>
+        <Navbar activeSection={activeSection} data={portfolioData} />
+        <HeroSection
+          data={portfolioData}
+          pypiStats={pypiStats ?? undefined}
+          onTripleTap={triggerReflex}
+          onTriggerRacer={triggerRacer}
+          onTriggerSnake={triggerSnake}
+        />
+        <AboutSection data={portfolioData} />
+        <TechStackSection data={portfolioData} />
+        <ExperienceSection data={portfolioData} />
+        <ProfessionalProjectsSection data={portfolioData} />
+        <ProjectsSection data={portfolioData} pypiStats={pypiStats ?? undefined} />
+        <EducationSection data={portfolioData} />
+        <PublicationSection data={portfolioData} />
+        <ContactSection data={portfolioData} />
+        <ScrollBallGame />
+        <FloatingTerminalButton />
+      </div>
+      <HelpSheet active={helpActive} onClose={handleResetHelp} />
+      <ReplicateSheet active={replicateActive} onClose={handleResetReplicate} />
+      {/* Motion permission toast */}
+      {showMotionToast && (
+        <div className="fixed bottom-6 left-4 right-4 z-[90] flex items-center justify-between
+                        bg-black/95 border border-[rgba(var(--gui-accent-rgb),0.3)] px-4 py-3 font-mono text-xs
+                        backdrop-blur-sm animate-in slide-in-from-bottom-4">
+          <span className="text-zinc-300">Shake to change colors!</span>
+          <div className="flex gap-2 ml-3 shrink-0">
+            <button
+              onClick={handleEnableMotion}
+              className="px-3 py-1.5 border border-[rgba(var(--gui-accent-rgb),0.5)] text-gui-accent
+                         hover:bg-[rgba(var(--gui-accent-rgb),0.1)] transition-colors"
+            >
+              Enable
+            </button>
+            <button
+              onClick={dismissMotionToast}
+              className="px-3 py-1.5 border border-white/10 text-zinc-500
+                         hover:text-zinc-300 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}

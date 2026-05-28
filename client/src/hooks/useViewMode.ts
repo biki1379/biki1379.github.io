@@ -1,0 +1,124 @@
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createElement } from 'react';
+import { storageConfig } from '../config';
+
+export type ViewMode = 'splash' | 'terminal' | 'gui';
+
+/**
+ * View-mode persistence: sessionStorage (per-tab, per-session) rather than
+ * localStorage. Every new browser session / new tab sees the splash again,
+ * which means every first interaction after opening the site gives us a
+ * valid user gesture to request fullscreen (via SplashPage.handleSelect).
+ * URL hash still takes precedence for deep-linking.
+ */
+const viewModeStore = {
+  get(): string | null {
+    try { return sessionStorage.getItem(storageConfig.keys.viewMode); }
+    catch { return null; }
+  },
+  set(value: string): void {
+    try { sessionStorage.setItem(storageConfig.keys.viewMode, value); }
+    catch {}
+  },
+};
+
+interface ViewModeContextValue {
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  switchTo: (mode: 'terminal' | 'gui') => void;
+}
+
+const ViewModeContext = createContext<ViewModeContextValue | null>(null);
+
+/** Hashes that should land the user inside GUI (games + replicate sheet live there). */
+const GAME_HASHES = new Set([
+  'snake', 'racer', 'reflex', 'help',
+  'replicate', 'fork', 'clone',
+]);
+
+function hashToMode(hash: string): ViewMode | null {
+  const clean = hash.replace('#', '').toLowerCase();
+  if (clean === 'terminal') return 'terminal';
+  if (clean === 'gui') return 'gui';
+  // Game-name hashes force GUI view — GUIPortfolio then reads the hash and
+  // fires the corresponding trigger. Skips splash on direct-link arrivals.
+  if (GAME_HASHES.has(clean)) return 'gui';
+  return null;
+}
+
+function modeToHash(mode: ViewMode): string {
+  if (mode === 'terminal') return '#terminal';
+  if (mode === 'gui') return '#gui';
+  return '';
+}
+
+function getInitialViewMode(): ViewMode {
+  // URL hash takes priority
+  const fromHash = hashToMode(window.location.hash);
+  if (fromHash) return fromHash;
+
+  // Then localStorage
+  const stored = viewModeStore.get();
+  if (stored === 'terminal' || stored === 'gui') {
+    return stored;
+  }
+  return 'splash';
+}
+
+export function ViewModeProvider({ children }: { children: ReactNode }) {
+  const [viewMode, setViewModeState] = useState<ViewMode>(getInitialViewMode);
+
+  const setViewMode = useCallback((mode: ViewMode) => {
+    setViewModeState(mode);
+    // Never persist "splash" - only persist terminal/gui
+    if (mode !== 'splash') {
+      viewModeStore.set(mode);
+    }
+    // Update URL hash without triggering scroll
+    const newHash = modeToHash(mode);
+    if (newHash) {
+      window.history.replaceState(null, '', newHash);
+    } else {
+      // Splash — remove hash
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  const switchTo = useCallback((mode: 'terminal' | 'gui') => {
+    setViewMode(mode);
+  }, [setViewMode]);
+
+  // Listen for browser back/forward or manual hash changes
+  useEffect(() => {
+    const onHashChange = () => {
+      const mode = hashToMode(window.location.hash);
+      if (mode && mode !== viewMode) {
+        setViewModeState(mode);
+        viewModeStore.set(mode);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [viewMode]);
+
+  // Set initial hash if arriving with a stored preference (no hash in URL)
+  useEffect(() => {
+    if (!window.location.hash && viewMode !== 'splash') {
+      window.history.replaceState(null, '', modeToHash(viewMode));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return createElement(
+    ViewModeContext.Provider,
+    { value: { viewMode, setViewMode, switchTo } },
+    children
+  );
+}
+
+export function useViewMode(): ViewModeContextValue {
+  const context = useContext(ViewModeContext);
+  if (!context) {
+    throw new Error('useViewMode must be used within a ViewModeProvider');
+  }
+  return context;
+}

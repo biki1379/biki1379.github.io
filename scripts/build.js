@@ -1,0 +1,120 @@
+#!/usr/bin/env node
+
+/**
+ * Build Script with Conditional Resume Generation
+ *
+ * This script:
+ * 1. Checks if resume.yaml exists
+ * 2. If yes, runs generate-resume to create resume.json
+ * 3. Then runs vite build
+ * 4. If no resume.yaml, skips generation and builds with fallback metadata
+ */
+
+import { existsSync } from 'fs';
+import { execSync } from 'child_process';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = join(__dirname, '..');
+
+const resumePath = join(rootDir, 'resume.yaml');
+
+// Generate template-config.ts first — every other build step (and the dev
+// server) imports it, so it must exist before anything else runs.
+console.log('🧩 Generating template-config.ts...\n');
+try {
+  execSync('node scripts/generate-template-config.js', {
+    stdio: 'inherit',
+    cwd: rootDir,
+  });
+  console.log('');
+} catch (error) {
+  console.error('❌ Failed to generate template-config.ts');
+  throw error;
+}
+
+// Fetch PyPI download stats
+console.log('📊 Fetching PyPI download statistics...\n');
+try {
+  execSync('node scripts/fetch-pypi-stats.js', {
+    stdio: 'inherit',
+    cwd: rootDir
+  });
+  console.log('\n✅ PyPI stats fetched\n');
+} catch (error) {
+  console.warn('⚠️  Could not fetch PyPI stats (network issue or rate limit)');
+  console.warn('   Building without live stats...\n');
+}
+
+// Inline fresh PyPI counts into resume.yaml prose (so generate-resume sees them)
+if (existsSync(resumePath)) {
+  console.log('🔢 Inlining PyPI counts into resume.yaml...\n');
+  try {
+    execSync('node scripts/inline-pypi-stats.js', {
+      stdio: 'inherit',
+      cwd: rootDir
+    });
+    console.log('');
+  } catch (error) {
+    console.warn('⚠️  inline-pypi-stats failed (config error?)');
+    console.warn('   Continuing build with current resume.yaml...\n');
+  }
+}
+
+if (existsSync(resumePath)) {
+  console.log('📄 resume.yaml found - generating resume files...\n');
+
+  try {
+    // Check if rendercv is available
+    execSync('which rendercv', { stdio: 'pipe' });
+
+    // Run generate-resume
+    execSync('npm run generate-resume:prod', {
+      stdio: 'inherit',
+      cwd: rootDir
+    });
+
+    console.log('\n✅ Resume generation complete\n');
+  } catch (error) {
+    console.warn('⚠️  Could not generate resume (rendercv not installed or generation failed)');
+    console.warn('   Building with fallback metadata...\n');
+  }
+} else {
+  console.log('ℹ️  No resume.yaml found - building with generic metadata\n');
+}
+
+// Generate AI resume conversion prompt
+console.log('🤖 Generating AI resume conversion prompt...\n');
+try {
+  execSync('node scripts/generate-ai-prompt.js', {
+    stdio: 'inherit',
+    cwd: rootDir
+  });
+} catch (error) {
+  console.warn('⚠️  Could not generate AI prompt');
+  console.warn('   Continuing with build...\n');
+}
+
+// Fetch GitHub template stats (forks, stars, traffic, orphans)
+console.log('📊 Fetching template adoption stats...\n');
+try {
+  execSync('node scripts/fetch-stats.js', {
+    stdio: 'inherit',
+    cwd: rootDir
+  });
+  console.log('');
+} catch (error) {
+  console.warn('⚠️  Could not fetch template stats (no token, rate limit, or network)');
+  console.warn('   Building without live template stats...\n');
+}
+
+// Run vite build
+console.log('🏗️  Building application...\n');
+execSync('vite build', {
+  stdio: 'inherit',
+  cwd: rootDir
+});
+
+console.log('\n✅ Build complete!');
