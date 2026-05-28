@@ -1,0 +1,101 @@
+tagline: "Software Engineer | Backend & Cloud"
+# ====================================================================
+# Terminal Portfolio - Resume Configuration
+# ====================================================================
+
+cv:
+  name: "Biki Saha"
+  location: "Kolkata, West Bengal"
+  email: "bikisaha003@gmail.com"
+  phone: "tel:+91-90027-62648"
+  social_networks:
+    - network: "LinkedIn"
+      username: "biki-saha"
+    - network: "GitHub"
+      username: "biki1379"
+
+  sections:
+    intro:
+      - "CS grad with a strong focus on backend development and cloud technologies, passionate about building reliable software systems on AWS."
+      - "Fast learner who adapts quickly to new teams and environments, eager to contribute and grow in the technology industry."
+
+    technologies:
+      - label: "Languages"
+        details: "Java, Python, SQL"
+      - label: "Cloud"
+        details: "AWS (EC2, S3, IAM, Lambda)"
+      - label: "Dev Tools"
+        details: "Git, GitHub"
+      - label: "Concepts"
+        details: "OOP, DSA, DBMS"
+      - label: "Operating Systems"
+        details: "Linux, Windows"
+
+    experience:
+      - company: "Sparks Lab"
+        position: "Operation Analyst"
+        start_date: "2026-01"
+        end_date: "2026-04"
+        highlights:
+          - "Coordinated with clients and internal teams to ensure smooth daily workflow execution."
+          - "Managed task tracking, communication pipelines, and operational processes in a fast-paced environment."
+
+      - company: "Elevate Labs"
+        position: "SQL Developer Intern"
+        location: "Bengaluru, Karnataka"
+        start_date: "2025-06"
+        end_date: "2025-07"
+        highlights:
+          - "Wrote optimized SQL queries for data management tasks supporting core business processes."
+          - "Handled structured data operations including CRUD workflows in a production database environment."
+
+    education:
+      - institution: "Calcutta Institute of Engineering and Management"
+        location: "Kolkata, West Bengal"
+        area: "Computer Science and Engineering"
+        degree: "B.Tech"
+        start_date: "2021-09"
+        end_date: "2025-07"
+        highlights:
+          - "CGPA: **7.76**/10"
+
+      - institution: "Netaji Centenary School"
+        location: "Dinhata, West Bengal"
+        area: "Science"
+        degree: "HSC (CBSE)"
+        start_date: "2019-08"
+        end_date: "2021-07"
+        highlights:
+          - "Percentage: 66%"
+
+    personal_projects:
+      - name: "Event-Driven Data Pipeline"
+        date: "2025-07"
+        highlights:
+          - "Designed and deployed an automated event-driven pipeline using AWS, Terraform, and GitHub Actions."
+          - "Configured serverless Lambda execution triggered by S3 file upload events."
+          - "Provisioned infrastructure with Terraform; set up CloudWatch for logging and monitoring."
+
+      - name: "Expense Tracker REST API"
+        date: "2026-01"
+        highlights:
+          - "Built a RESTful backend using Java, Spring Boot, and Spring Data JPA with full CRUD support."
+          - "Implemented user management and expense tracking with business rule validations."
+          - "Adopted layered architecture (Controller, Service, Repository) with DTOs for data security."
+          - "Verified all endpoints using Postman with robust error handling throughout."
+
+    certifications:
+      - name: "Getting Started with AWS Services Fundamentals"
+        date: "2025-11"
+        highlights:
+          - "Issued by Simplilearn · Certificate Code: 9444255"
+
+      - name: "AWS Certification Course"
+        date: "2025-11"
+        highlights:
+          - "Issued by Intellipaat · Certificate ID: 31679-1654-300485"
+
+      - name: "Claude 101"
+        date: "2025-05"
+        highlights:
+          - "Issued by Anthropic Education"
